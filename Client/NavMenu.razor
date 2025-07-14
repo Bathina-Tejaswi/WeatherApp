@@ -1,0 +1,32 @@
+﻿@inject NavigationManager Navigation
+
+<div>
+    <nav class="flex-column">
+        @if (IsOnHomePage)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="weather">
+                    <span class="oi oi-list-rich" aria-hidden="true"></span> Weather
+                </NavLink>
+            </div>
+        }
+        else if (IsOnWeatherPage)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
+                    <span class="oi oi-home" aria-hidden="true"></span> Home
+                </NavLink>
+            </div>
+        }
+    </nav>
+</div>
+
+@code {
+    private bool IsOnHomePage => Navigation.Uri.TrimEnd('/').Equals(Navigation.BaseUri.TrimEnd('/'), StringComparison.OrdinalIgnoreCase);
+    private bool IsOnWeatherPage => Navigation.Uri.Contains("/weather", StringComparison.OrdinalIgnoreCase);
+    protected override void OnInitialized()
+    {
+        Navigation.LocationChanged += (_, __) => StateHasChanged();
+    }
+}
+

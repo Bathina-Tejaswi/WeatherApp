@@ -1,0 +1,55 @@
+﻿@page "/weather"
+@inject HttpClient Http
+
+<h3>Weather Search</h3>
+<input @bind="city" placeholder="Enter city" />
+<button @onclick="SearchWeather">Search</button>
+
+@if (!string.IsNullOrWhiteSpace(temp))
+{
+    <p><strong>@city:</strong> @temp °C</p>
+}
+
+<h4>Saved Cities</h4>
+<ul>
+    @foreach (var saved in savedCities)
+    {
+        <li @onclick="@(() => LoadWeather(saved.CityName))">@saved.CityName</li>
+    }
+</ul>
+
+@code {
+    private string city = "";
+    private string temp = "";
+    private List<WeatherApp1.Shared.CitySearch> savedCities = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        savedCities = await Http.GetFromJsonAsync<List<WeatherApp1.Shared.CitySearch>>("api/CitySearches") ?? new();
+    }
+
+    private async Task SearchWeather()
+    {
+        var apiKey = "df9e0029acb7f38841642d69eeb7754c"; // Replace with your OpenWeatherMap key
+        var response = await Http.GetFromJsonAsync<WeatherResult>($"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={apiKey}&units=metric");
+        if (response != null)
+        {
+            temp = response.main.temp.ToString();
+            await Http.PostAsJsonAsync("api/CitySearches", new WeatherApp1.Shared.CitySearch { CityName = city });
+            savedCities = await Http.GetFromJsonAsync<List<WeatherApp1.Shared.CitySearch>>("api/CitySearches") ?? new();
+        }
+    }
+
+    private async Task LoadWeather(string cityName)
+    {
+        city = cityName;
+        await SearchWeather();
+    }
+
+    public class WeatherResult
+    {
+        public MainData main { get; set; }
+        public class MainData { public float temp { get; set; } }
+    }
+}
+
